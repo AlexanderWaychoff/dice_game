@@ -60,23 +60,25 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 		}
 		if (monsterEncounter === 0){
 			console.log("It is turn " + turnCount + ".  You are at stage " + currentStage + " with " + playerHealth + " health.");
-			for(let j = currentStage; j < currentStage + 15; j++){
+			for(let j = currentStage; j < currentStage + 15 && j < lastStage; j++){
 				if (!(monsterPosition[j] === "x")){
 					monsterCheck += 1;
-					if (monsterPosition[j] === 9){
-						j += 15;
-					}
+					
 					monsterID = monsterPosition[j];
-					monsterDistanceFromPlayer = j - currentStage;
+					monsterDistanceFromPlayer = j - currentStage + 1;
 					monsterName = getMonsterID(monsterID);				//displays text of monster name to player
-					monsterCurrentPosition = monsterDistanceFromPlayer - 1;
+					monsterCurrentPosition = monsterDistanceFromPlayer + j - 1; //make adjustments so it lines up correctly in array
 					monsterPlayerPositionDifference = monsterCurrentPosition - currentStage;
 					//monsterStats = getMonsterStats(monsterPosition, j);
 					monsterStatsArray = setMonsterStats(monsterPosition, monsterDistanceFromPlayer, monsterStats, monsterCheck);
 					monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck, monsterID, monsterCurrentPosition, monsterPlayerPositionDifference, monsterAwarenessArray);
 					
-					isMonsterAware = declareMonsterAwareness(monsterID, monsterPlayerPositionDifference, monsterAwarenessArray, monsterCurrentPosition);
-
+					if (monsterID >= 0){
+						isMonsterAware = declareMonsterAwareness(monsterID, monsterPlayerPositionDifference, monsterAwarenessArray, monsterCurrentPosition);
+					}
+					if (monsterPosition[j] === 9){
+						j += 15;
+					}
 					
 					if (monsterAwarenessArray[j] === "a"){
 						//
@@ -104,7 +106,7 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 			}
 		}
 		
-		
+		//break;
 	}
 	
 	console.log(playerClass);
@@ -555,10 +557,18 @@ function getMonsterID (monsterID){
 		monsterName = "Ogre";
 		return monsterName;
 	}
+	if (monsterID === 6){
+		monsterName = "Neanderthal";
+		return monsterName;
+	}
+	if (monsterID === 9){
+		monsterName = "Wall";
+		return monsterName;
+	}
 	return monsterName;
 }
 
-function setMonsterAwareness (monsterPosition, isMonsterAware, monsterCheck, monsterID, monsterPositionIndex, monsterPlayerPositionDifference, monsterAwarenessArray){
+function setMonsterAwareness (monsterPosition, isMonsterAware, monsterCheck, monsterID, monsterCurrentPosition, monsterPlayerPositionDifference, monsterAwarenessArray){
 	//let isAware; //s = false, a = true
 	isMonsterAware = getMonsterAwareness(monsterID, monsterPlayerPositionDifference);
 	
@@ -579,7 +589,7 @@ function setMonsterAwareness (monsterPosition, isMonsterAware, monsterCheck, mon
 	}
 	
 	if (isMonsterAware === 1){
-		monsterAwarenessArray[monsterPositionIndex] = "a";
+		monsterAwarenessArray[monsterCurrentPosition] = "a";
 	}
 	console.log(monsterAwarenessArray);
 	return monsterAwarenessArray;
