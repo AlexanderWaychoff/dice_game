@@ -65,36 +65,42 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 					monsterCheck += 1;
 					
 					monsterID = monsterPosition[j];
-					monsterDistanceFromPlayer = j - currentStage + 1;
+					monsterDistanceFromPlayer =  j - currentStage;
 					monsterName = getMonsterID(monsterID);				//displays text of monster name to player
-					monsterCurrentPosition = monsterDistanceFromPlayer + j - 1; //make adjustments so it lines up correctly in array
+					monsterCurrentPosition = monsterDistanceFromPlayer + currentStage; //make adjustments so it lines up correctly in array
 					monsterPlayerPositionDifference = monsterCurrentPosition - currentStage;
 					//monsterStats = getMonsterStats(monsterPosition, j);
 					monsterStatsArray = setMonsterStats(monsterPosition, monsterDistanceFromPlayer, monsterStats, monsterCheck);
 					monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck, monsterID, monsterCurrentPosition, monsterPlayerPositionDifference, monsterAwarenessArray);
 					
 					if (monsterID >= 0){
+						//monsterCurrentPosition = monsterDistanceFromPlayer + ;
 						isMonsterAware = declareMonsterAwareness(monsterID, monsterPlayerPositionDifference, monsterAwarenessArray, monsterCurrentPosition);
 					}
 					if (monsterPosition[j] === 9){
 						j += 15;
 					}
 					
-					if (monsterAwarenessArray[j] === "a"){
-						//
-					}
-					
-					
 					console.log("A " + monsterName + " can be seen " + monsterDistanceFromPlayer + " stages ahead.  " + isMonsterAware);
 				}
 				
 			}
+			console.log(monsterPosition);
+			console.log(monsterAwarenessArray);
 			if (!(playerClass === "mage")){
 				console.log("You can: roll to move the largest distance, or move one stage (moving one stage can sneak up on monsters, however might fail the closer you get)");
 				determineRoll = getMoveCommand(playerClass);
-				currentStage += determineRoll;
 				console.log(currentStage);
 				console.log(determineRoll);
+				for (currentStage; monsterPosition[currentStage] === "x" && determineRoll > 0; currentStage){
+					determineRoll -= 1;
+					currentStage += 1;
+					console.log(determineRoll);
+					console.log(currentStage);
+				}
+				if (!(monsterPosition[currentStage] === "x")){
+					monsterEncounter = 1;
+				}
 			}else if (monsterDistanceFromPlayer <= 12){
 				console.log("You can: roll a 12 die to try a ranged attack (the number rolled is how many stages your attack can reach, an attack that doesn't travel far enough will alert the monster), roll to move the largest distance, or move one stage (moving one stage can sneak up on monsters, however might fail the closer you get)");
 				determineRoll = getMoveCommand(playerClass);
@@ -102,8 +108,27 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 			}else{
 				console.log("You can: roll to move the largest distance, or move one stage (moving one stage can sneak up on monsters, however might fail the closer you get)");
 				determineRoll = getMoveCommand(playerClass);
-				currentStage += determineRoll;
+				for (currentStage; monsterPosition[currentStage] === "x" && determineRoll > 0; currentStage){
+					determineRoll -= 1;
+					currentStage += 1;
+					console.log(determineRoll);
+					console.log(currentStage);
+				}
+				if (!(monsterPosition[currentStage] === "x")){
+					monsterEncounter = 1;
+				}
 			}
+			if (monsterEncounter === 1){
+				monsterID = monsterPosition[currentStage];
+				monsterName = getMonsterID(monsterID);
+				console.log("Battle with " +  monsterName + " has begun!");
+				alert("Press 'OK' to end this turn");
+			}
+		}
+		if (monsterEncounter === 1){
+			console.log(monsterName);
+			alert("Code came to this message.");
+			break;
 		}
 		
 		//break;
@@ -193,11 +218,11 @@ function determineMonsterPosition (monsterChance, monsterCount, monsterStrength,
 	console.log(monsterAmount);
 	
 	if (monsterAmountTest < 3){
-		let monsterAdjustment = 3;
+		let monsterAdjustment = 4;
 		monsterAmount += monsterAdjustment;
 	}
 	if (monsterAmountTest < 2){
-		let monsterAdjustment = 2;
+		let monsterAdjustment = 3;
 		monsterAmount += monsterAdjustment;
 	}
 	if (monsterAmountTest < 1){
@@ -205,17 +230,13 @@ function determineMonsterPosition (monsterChance, monsterCount, monsterStrength,
 		monsterAmount += monsterAdjustment;
 	}
 	console.log(monsterAmount);
-	monsterAmount = 23;  //testing purposes, remove later
 	
 	let monsterBaseAmount = monsterStrength * monsterAmount - 2;	//2: spawns 2 weak monsters before tougher ones can spawn
 	
 	let monsterStageDistance = Math.floor(remainingStages / monsterAmount);
 	console.log(monsterStageDistance);
 	
-	for (let i = 0; i <= 98; i ++){
-		// if(i < 5){
-			// monsterStageArray.push("x");	//x = empty stage
-		// }
+	for (let i = 0; i <= 99; i ++){
 		if(i >= 0 && i <= 99){
 			remainingStages = baseStages - i;
 			
@@ -273,15 +294,10 @@ function determineMonsterPosition (monsterChance, monsterCount, monsterStrength,
 			monsterStageFallBack = monsterStageDistanceGap + monsterStageDistance;
 			totalMonstersSet += 1;
 		}
-		// if (i === 98){
-			// monsterStageArray.push(finalBoss);
-			// console.log(monsterStageArray);
-			// return monsterStageArray;
-		// }
 	}
 	
+	return monsterStageArray;
 		
-	
 	//0 = Mr. Mustachio
 	//1 = Slime
 	//2 = Disgruntled Boxer
@@ -290,12 +306,7 @@ function determineMonsterPosition (monsterChance, monsterCount, monsterStrength,
 	//5 = ogre
 	//6 = neanderthal
 	//9 = wall
-	console.log(monsterAmount);
-	console.log(monsterAmountTest);
-	
-	console.log(monsterStageArray);
-	
-}
+	}
 
 function getMonsterStats (monsterPosition, monsterPositionIndex){
 	
@@ -591,7 +602,6 @@ function setMonsterAwareness (monsterPosition, isMonsterAware, monsterCheck, mon
 	if (isMonsterAware === 1){
 		monsterAwarenessArray[monsterCurrentPosition] = "a";
 	}
-	console.log(monsterAwarenessArray);
 	return monsterAwarenessArray;
 }
 
@@ -641,6 +651,11 @@ function getMoveCommand (playerClass){
 	
 	while(1){
 			
+		if(move === "99"){
+			movement = 100;
+			return movement;
+		}
+		
 		if(!(move === "move" || move === "+1")){
 			alert("Your input wasn't valid.  Try again (type 'move' or '+1' exactly)");						
 			move = prompt("Type 'move' or '+1'");
