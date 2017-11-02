@@ -34,6 +34,9 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 	let monsterStatsArray;
 	let monsterAwarenessArray;
 	
+	let monsterDamage = 0;
+	
+	
 	monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck);
 
 	
@@ -44,6 +47,7 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 	//let playerPosition = 1;
 	let currentStage = 1;
 	let startingHealth = playerHealth;
+	let playerDamage = 0;
 	
 	for (currentStage; currentStage <= lastStage; currentStage){
 		turnCount += 1;
@@ -118,16 +122,50 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 					monsterEncounter = 1;
 				}
 			}
+			if (monsterEncounter === 1 && monsterAwarenessArray[currentStage] === "s"){
+				monsterID = monsterPosition[currentStage];
+				monsterName = getMonsterID(monsterID);
+				console.log("You caught " + monsterName + " unaware, you get to attack without retaliation!");
+				alert("You caught a monster by surprise!");
+				playerDamage = doSurpriseAttack(playerClass, determineRoll);
+				determineRoll = 0;
+				
+				monsterHealth = getMonsterHealth(monsterID);
+				monsterHealth = monsterHealth - playerDamage;
+				if (monsterHealth < 0){
+					monsterHealth = 0;
+				}
+				alert("You did " + playerDamage + " to " + monsterName + "!  "  + monsterName + " has " + monsterHealth + " health remaining.  Hit 'OK' to proceed to the next turn.")
+				
+			}
 			if (monsterEncounter === 1){
 				monsterID = monsterPosition[currentStage];
 				monsterName = getMonsterID(monsterID);
-				console.log("Battle with " +  monsterName + " has begun!");
+				console.log("Battle with " +  monsterName + " will begin next turn!");
 				alert("Press 'OK' to end this turn");
 			}
 		}
 		if (monsterEncounter === 1){
-			console.log(monsterName);
-			alert("Code came to this message.");
+			monsterID = monsterPosition[currentStage];
+			monsterName = getMonsterID(monsterID);
+			console.log("In battle with " + monsterName + "!");
+			getMonsterVisual(monsterID);
+			alert("Press 'OK' to attack!");
+			playerDamage = doRegularAttack(playerClass, determineRoll);
+			determineRoll = 0;
+			//add getMonsterHealth() and change the reference above so it doesn't overwrite
+			monsterHealth = monsterHealth - playerDamage;
+			
+			alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has" + monsterHealth + " health remaining.  Hit 'OK' to proceed to the next step.");
+			console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has " + monsterHealth + " health remaining.");
+			
+			monsterDamage = getMonsterDamage(monsterID);
+			playerHealth = playerHealth - monsterDamage;
+			
+			alert(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " remaining.  Hit 'OK to proceed to the next turn.");
+			console.log(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " health remaining.");
+			
+			
 			break;
 		}
 		
@@ -445,6 +483,71 @@ function getMonsterMovement (monster){
 	}		
 }
 
+function getMonsterVisual (monsterID){
+	
+	if (monsterID === 0){
+		console.log("d:{");
+		return;
+	}
+	if (monsterID === 1){
+		console.log("( *w*)");
+		return;
+	}
+	if (monsterID === 2){
+		console.log("Q(= n = Q)");
+		return;
+	}
+	if (monsterID === 3){
+		console.log("w( 0.0) ~~~~ (0.0 )w");
+		return;
+	}
+	if (monsterID === 4){
+		console.log("     q----p");
+		console.log("O----| @@ |----O");
+		console.log("| |( )|xx( ) |  |");
+		console.log("L___||uuuu||___v)");
+		return;
+	}
+	if (monsterID === 5){
+		console.log("| v  ___  v |   ( | | |( )");
+		console.log("|____________|   \      |");
+		return;
+	}
+	if (monsterID === 6){
+		console.log("──────────────────▄▄───▄▄▄▄▄▄▀▀▀▄──▄")
+		console.log("────────────────▄▀──▀▀█▄▄──▄────█▄█▄▀▀▄▄▄▄");
+		console.log("─────────────────▀█▀────▀▀▀▀█▄▄▄▄───▄▄────▀▀▀▀");
+		console.log("─────────────▄▀▀▀▀▀──▀█▄▄▄▄▄─▀▀▀▀▀█▄███▀");
+		console.log("──────────────▀█▄▄▄──▀▀─▄▄▄▄──────────▀▀▀▀█▀▀▀");
+		console.log("───────▄▀▀▀▄▄▀▀████▀█▄▄▄▄▄▄▄▄▄▄▄───▄▄▄▄──▄█░▄█");
+		console.log("────────▀▄▄▄▀▀██▀▀▀▄█─███▄──██─────▀██▀▀─█░░██");
+		console.log("────────────▀█─▀▀█▄█▄─▀▀▀───█────────────▀█░▀█");
+		console.log("─────────▄▄▀▀─▀▀▀▀░░▀█────▄█▄▀────────────█░░░");
+		console.log("───▄▀▀▀▀▀░░░░░░░░░░░░░▀██▀▀▄▄▀▀──────────██░░░");
+		console.log("▄▀▀▄████░░███████░░▄▄▄▄░░▀█▄─▀▀──────────▀█▄▄░");
+		console.log("█░░█████▄▄███████▄██████▄▄░▀█──███▄▄────────█▄");
+		console.log("█░░░▀▀▀▀▀▀▀▀▀▀▀░░░░░░░░░▀▀▀░░█─▀███▀───────▄█▀");
+		console.log("─▀▀▄▄▄▄▄░░░░░░░░░░░░░░░░░░░░▄▀─────────────▀█░");
+		console.log("───▄▀▄▄▀░░░░░░░░░░░░░░░░░░░░█────────────────█");
+		console.log("▀▀▀─▀▄▀█░░░░░░░░░░░░░░░░░░░░█───────────────▄▀");
+		console.log("─▄▄▀▀──▀▄░░░░░░░░░░░░░░░░░░█────────────────█░");
+		console.log("▀────────▀▄░░░░░░░░░░░░░░▄▀──────────▄█▄▄────█");
+		console.log("───────────▀▄▄▄▄░░░░░▄▄▄▀────────────▀██▀────█");
+		console.log("────────────█░░░▀▀▀▀██████████▀▀▀▀▀▀▄▄▄▄▄▄▄▄▄█");
+		console.log("───────────▄▀░░░░░░░█▒▒▒▒▒▒▒▒█░░░░░░░░░▄▄░░░░█");
+		console.log("───────────▀▄▄▄░░░░░█▒▒▒▒▒▒▒▒█░░░░░░░░░▀█▀░░░█");
+		console.log("image obtained from http://www.messletters.com/en/text-art/");
+		return;
+	}
+	if (monsterID === 9){
+		console.log("_________________________");
+		console.log("|_I_I_I_I_I_I_I_I_I_I_I_|");
+		console.log("|                       |");
+		console.log("|_______________________|");
+		return;
+	}
+}
+	
 function declareMonsterAwareness (monster, monsterPosition, monsterAwarenessArray, monsterAwarenessIndex){
 	let monsterAwareness;
 	let monsterAwarenessTest;
@@ -646,6 +749,7 @@ function classHealth (playerClass){
 
 function getMoveCommand (playerClass){
 	
+	
 	let move = prompt("Type 'move' or '+1'");
 	let movement;
 	
@@ -677,6 +781,64 @@ function getMoveCommand (playerClass){
 				return movement;
 			}
 		}
+	}
+}
+
+function doSurpriseAttack (playerClass, determineRoll){
+	let damageDealt = 0;
+	let minimumDamage = 0;
+	
+	if (playerClass === "warrior"){
+		damageDealt = calculate20Roll();
+		if (damageDealt < 12){
+			minimumDamage = calculate12Roll();
+			if (minimumDamage > damageDealt){
+				return minimumDamage;
+			}
+			return damageDealt;
+		}
+	}
+	if (playerClass === "mage"){
+		damageDealt = calculate12Roll();
+		return damageDealt;
+	}
+	if (playerClass === "rogue"){
+		if (determineRoll > 1){
+			damageDealt = calculate8Roll() * determineRoll;
+			return damageDealt;
+		}
+		damageDealt = calculate8Roll();
+		return damageDealt;
+	}
+		
+}
+
+function doRegularAttack (playerClass){
+	let damageDealt = 0;
+	let minimumDamage = 0;
+	
+	if (playerClass === "warrior"){
+		damageDealt = calculate20Roll();
+		if (damageDealt < 12){
+			minimumDamage = calculate12Roll();
+			if (minimumDamage > damageDealt){
+				return minimumDamage;
+			}
+			return damageDealt;
+		}
+	}
+	if (playerClass === "mage"){
+		damageDealt = calculate12Roll();
+		return damageDealt;
+	}
+	if (playerClass === "rogue"){
+		if (determineRoll > 1){
+			console.log("You rolled an extra " + determineRoll + " stages.  (deal " + determineRoll + "x damage).");
+			damageDealt = calculate8Roll() * determineRoll;
+			return damageDealt;
+		}
+		damageDealt = calculate8Roll();
+		return damageDealt;
 	}
 }
 
@@ -743,7 +905,7 @@ function calculate20Roll(playerClass, determineRoll){
 
 	//mr mustachio console.log("d:{");
 	//slime console.log("( *w*)");
-	//boxer console.log("Q(= n = Q)")
+	//boxer console.log("Q(= n = Q)");
 	//paranoid pleb console.log("w( 0.0) ~~~~ (0.0 )w");
 	//robot
 	//console.log("     q----p");
