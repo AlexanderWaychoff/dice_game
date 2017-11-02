@@ -21,7 +21,7 @@ function describeGame(){
 function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameEnder, monsterPosition){
 	let lastStage = 100;
 	let mistMovement;
-	let mistStage;
+	let mistStage = 0;
 	//monster
 	let monsterID;
 	let monsterDistanceFromPlayer;
@@ -31,26 +31,30 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 	let isMonsterAware;
 	let monsterStats;
 	let monsterCheck = 0;
+	let monsterStatsArray;
+	let monsterAwarenessArray;
+	
+	monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck);
+
 	
 	let turnCount = 0;
 	let determineRoll = 0;
 	let spacesToMove;
 	//player variables
-	let playerPosition = 1;
+	//let playerPosition = 1;
 	let currentStage = 1;
 	let startingHealth = playerHealth;
 	
-	for(let stage = 0; stage <= lastStage; stage){
+	for (currentStage; currentStage <= lastStage; currentStage){
 		turnCount += 1;
-		playerPosition = currentStage;
 		if (turnCount >= gameEnder){
 			if (turnCount === gameEnder){
 				console.log("The mist has appeared.  The time to reach the end is running out!");
 			}
-			mistMovement = calculate8Roll(playerClass);
+			mistMovement = calculate8Roll() + 3;
 			mistStage += mistMovement;
 			console.log("The mist has reached stage " + mistStage + ".  Don't let it reach you!")
-			if (mistStage >= playerStage){
+			if (mistStage >= currentStage){
 				return console.log("The mist caught up to you.  You lose!");
 			}
 		}
@@ -59,14 +63,27 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 			for(let j = currentStage; j < currentStage + 15; j++){
 				if (!(monsterPosition[j] === "x")){
 					monsterCheck += 1;
+					if (monsterPosition[j] === 9){
+						j += 15;
+					}
 					monsterID = monsterPosition[j];
-					monsterDistanceFromPlayer = j;
-					monsterName = getMonsterID(monsterID);
-					monsterCurrentPosition = currentStage + monsterDistanceFromPlayer;
+					monsterDistanceFromPlayer = j - currentStage;
+					monsterName = getMonsterID(monsterID);				//displays text of monster name to player
+					monsterCurrentPosition = monsterDistanceFromPlayer - 1;
 					monsterPlayerPositionDifference = monsterCurrentPosition - currentStage;
-					isMonsterAware = getMonsterAwareness(monsterID, monsterPlayerPositionDifference);
-					monsterStats = getMonsterStats(monsterPosition, j, monsterCheck);
-					console.log("A " + monsterName + " with " + monsterStats + " can be seen " + monsterDistanceFromPlayer + " stages ahead.  " + isMonsterAware);
+					//monsterStats = getMonsterStats(monsterPosition, j);
+					monsterStatsArray = setMonsterStats(monsterPosition, monsterDistanceFromPlayer, monsterStats, monsterCheck);
+					monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck, monsterID, monsterCurrentPosition, monsterPlayerPositionDifference, monsterAwarenessArray);
+					
+					isMonsterAware = declareMonsterAwareness(monsterID, monsterPlayerPositionDifference, monsterAwarenessArray, monsterCurrentPosition);
+
+					
+					if (monsterAwarenessArray[j] === "a"){
+						//
+					}
+					
+					
+					console.log("A " + monsterName + " can be seen " + monsterDistanceFromPlayer + " stages ahead.  " + isMonsterAware);
 				}
 				
 			}
@@ -78,13 +95,16 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 				console.log(determineRoll);
 			}else if (monsterDistanceFromPlayer <= 12){
 				console.log("You can: roll a 12 die to try a ranged attack (the number rolled is how many stages your attack can reach, an attack that doesn't travel far enough will alert the monster), roll to move the largest distance, or move one stage (moving one stage can sneak up on monsters, however might fail the closer you get)");
+				determineRoll = getMoveCommand(playerClass);
+				currentStage += determineRoll;
 			}else{
 				console.log("You can: roll to move the largest distance, or move one stage (moving one stage can sneak up on monsters, however might fail the closer you get)");
 				determineRoll = getMoveCommand(playerClass);
-				currentStage += determineRoll;			}
+				currentStage += determineRoll;
+			}
 		}
 		
-		break;
+		
 	}
 	
 	console.log(playerClass);
@@ -183,6 +203,7 @@ function determineMonsterPosition (monsterChance, monsterCount, monsterStrength,
 		monsterAmount += monsterAdjustment;
 	}
 	console.log(monsterAmount);
+	monsterAmount = 23;  //testing purposes, remove later
 	
 	let monsterBaseAmount = monsterStrength * monsterAmount - 2;	//2: spawns 2 weak monsters before tougher ones can spawn
 	
@@ -280,7 +301,7 @@ function getMonsterStats (monsterPosition, monsterPositionIndex){
 	let monsterHealth;
 	
 	for (let i = 0; i < 100; i++){
-		if (!(monsterPosition === "x"){
+		if (!(monsterPosition === "x")){
 			
 		}else{
 			monsterType = monsterPosition[i];
@@ -411,15 +432,44 @@ function getMonsterMovement (monster){
 	}		
 }
 
-function getMonsterAwareness (monster, monsterPosition){
+function declareMonsterAwareness (monster, monsterPosition, monsterAwarenessArray, monsterAwarenessIndex){
 	let monsterAwareness;
 	let monsterAwarenessTest;
 	let isAware = "It is currently unaware of you're position.";
+	
+	//s = false, a = true
+	
+	// if (monsterAwarenessArray[monsterAwarenessIndex] === "s"){
+		
+	// }
+	if (monsterAwarenessArray[monsterAwarenessIndex] === "a"){
+		isAware = "It noticed you and is aware of you're position!  It will move towards you next turn and any attack engaged will result in a counterattack! (unless you knock this monster out in one blow or are using a ranged attack(Mage))";
+		return isAware;
+	}
+	
+	if(monster === 6){	//neanderthal
+		monsterAwareness = 0;
+		isAware = "He doesn't seem to care what's going on around him.";
+		return isAware;
+	}
+	if(monster === 9){	//wall
+		monsterAwareness = 0;
+		isAware = "You're unable to see past the wall.";
+		return isAware;
+	}	
+	return isAware;
+}
+
+function getMonsterAwareness (monster, monsterPosition){
+	
+	let monsterAwareness;
+	let monsterAwarenessTest;
+	let isAware = 0;
 	if(monster === 0){	//mr mustachio
 		monsterAwareness = calculate8Roll();
 		monsterAwarenessTest = monsterPosition - monsterAwareness;
 		if (monsterAwarenessTest <= 0){
-			isAware = "It noticed you and is aware of you're position!  It will move towards you next turn and any attack engaged will result in a counterattack! (unless you knock this monster out in one blow or are using a ranged attack(Mage))";
+			isAware = 1;
 			return isAware;
 		}
 	}
@@ -427,7 +477,7 @@ function getMonsterAwareness (monster, monsterPosition){
 		monsterAwareness = calculate6Roll();
 		monsterAwarenessTest = monsterPosition - monsterAwareness;
 		if (monsterAwarenessTest <= 0){
-			isAware = "It noticed you and is aware of you're position!  It will move towards you next turn and any attack engaged will result in a counterattack! (unless you knock this monster out in one blow or are using a ranged attack(Mage))";
+			isAware = 1;
 			return isAware;
 		}
 	}
@@ -435,7 +485,7 @@ function getMonsterAwareness (monster, monsterPosition){
 		monsterAwareness = calculate4Roll();
 		monsterAwarenessTest = monsterPosition - monsterAwareness;
 		if (monsterAwarenessTest <= 0){
-			isAware = "It noticed you and is aware of you're position!  It will move towards you next turn and any attack engaged will result in a counterattack! (unless you knock this monster out in one blow or are using a ranged attack(Mage))";
+			isAware = 1;
 			return isAware;
 		}	
 	}
@@ -443,7 +493,7 @@ function getMonsterAwareness (monster, monsterPosition){
 		monsterAwareness = 3 + calculate8Roll();
 		monsterAwarenessTest = monsterPosition - monsterAwareness;
 		if (monsterAwarenessTest <= 0){
-			isAware = "It noticed you and is aware of you're position!  It will move towards you next turn and any attack engaged will result in a counterattack! (unless you knock this monster out in one blow or are using a ranged attack(Mage))";
+			isAware = 1;
 			return isAware;
 		}
 	}
@@ -451,7 +501,7 @@ function getMonsterAwareness (monster, monsterPosition){
 		monsterAwareness = calculate8Roll();
 		monsterAwarenessTest = monsterPosition - monsterAwareness;
 		if (monsterAwarenessTest <= 0){
-			isAware = "It noticed you and is aware of you're position!  It will move towards you next turn and any attack engaged will result in a counterattack! (unless you knock this monster out in one blow or are using a ranged attack(Mage))";
+			isAware = 1;
 			return isAware;
 		}
 	}
@@ -459,45 +509,86 @@ function getMonsterAwareness (monster, monsterPosition){
 		monsterAwareness = calculate4Roll();
 		rmonsterAwarenessTest = monsterPosition - monsterAwareness;
 		if (monsterAwarenessTest <= 0){
-			isAware = "It noticed you and is aware of you're position!  It will move towards you next turn and any attack engaged will result in a counterattack! (unless you knock this monster out in one blow or are using a ranged attack(Mage))";
+			isAware = 1;
 			return isAware;
 		}
 	}
 	if(monster === 6){	//neanderthal
 		monsterAwareness = 0;
-		isAware = "";
+		isAware = 0;
 		return isAware;
 	}
 	if(monster === 9){	//wall
 		monsterAwareness = 0;
-		isAware = "";
+		isAware = 0;
 		return isAware;
 	}	
 	return isAware;
 }
+
 	//^ add playerClass maybe; stop
 function getMonsterID (monsterID){
+	
+	
 	let monsterName;
 	if (monsterID === 0){
 		monsterName = "Mustachio";
+		return monsterName;
 	}
 	if (monsterID === 1){
 		monsterName = "Slime";
+		return monsterName;
 	}
 	if (monsterID === 2){
 		monsterName = "Disgruntled Boxer";
+		return monsterName;
 	}
 	if (monsterID === 3){
 		monsterName = "Paranoid Pleb";
+		return monsterName;
 	}
 	if (monsterID === 4){
 		monsterName = "Robot";
+		return monsterName;
 	}
 	if (monsterID === 5){
 		monsterName = "Ogre";
+		return monsterName;
 	}
 	return monsterName;
 }
+
+function setMonsterAwareness (monsterPosition, isMonsterAware, monsterCheck, monsterID, monsterPositionIndex, monsterPlayerPositionDifference, monsterAwarenessArray){
+	//let isAware; //s = false, a = true
+	isMonsterAware = getMonsterAwareness(monsterID, monsterPlayerPositionDifference);
+	
+	//6 = neanderthal; 9 = wall;
+	if(monsterCheck === 0){
+		monsterAwarenessArray = [];
+		 for (let i = 0; i <= 99; i++){
+			if (!(monsterPosition[i] === "x" || monsterPosition[i] === 6 || monsterPosition[i] === 9)){
+				monsterAwarenessArray.push("s");
+			}else if (monsterPosition[i] === 6){
+				monsterAwarenessArray.push(6);
+			}else if (monsterPosition[i] === 9){
+				monsterAwarenessArray.push(9);
+			}else{
+				monsterAwarenessArray.push("x");
+			}
+		}
+	}
+	
+	if (isMonsterAware === 1){
+		monsterAwarenessArray[monsterPositionIndex] = "a";
+	}
+	console.log(monsterAwarenessArray);
+	return monsterAwarenessArray;
+}
+
+function setMonsterStats (monsterPosition, j, monsterStats, monsterCheck){
+	
+}
+
 function classHealth (playerClass){
 	let health;
 	if (playerClass === "warrior"){
