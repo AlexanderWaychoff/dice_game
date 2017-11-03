@@ -33,8 +33,11 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 	let monsterCheck = 0;
 	let monsterStatsArray;
 	let monsterAwarenessArray;
+	let monsterAwarenessID;
 	
 	let monsterDamage = 0;
+	let monsterCanMove = 0;	//0 = false, 1 = true
+	let monsterMovement = 0;
 	
 	
 	monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck);
@@ -46,8 +49,13 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 	//player variables
 	//let playerPosition = 1;
 	let currentStage = 1;
+	let stagesMoved = 0;
 	let startingHealth = playerHealth;
 	let playerDamage = 0;
+	let attacking = 0;
+	let getAction;
+	let restTurns = 0;
+	let isResting = 0;	//0 = false, 1 = true
 	
 	for (currentStage; currentStage <= lastStage; currentStage){
 		turnCount += 1;
@@ -55,17 +63,110 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 			if (turnCount === gameEnder){
 				console.log("The mist has appeared.  The time to reach the end is running out!");
 			}
-			mistMovement = calculate8Roll() + 3;
+			mistMovement = calculate10Roll() + 3;
 			mistStage += mistMovement;
 			console.log("The mist has reached stage " + mistStage + ".  Don't let it reach you!")
 			if (mistStage >= currentStage){
 				return console.log("The mist caught up to you.  You lose!");
 			}
 		}
+		
+		if (monsterEncounter === 1){
+			console.log("It is turn " + turnCount + ".  You are at stage " + currentStage + " with " + playerHealth + " health.");
+			monsterID = monsterPosition[currentStage];
+			console.log(attacking);
+			
+			if (attacking === 0){
+				monsterHealth = getMonsterHealth(monsterID);
+			}
+			attacking = 1;
+			console.log(attacking);
+			monsterName = getMonsterID(monsterID);
+			console.log("In battle with " + monsterName + "!");
+			getMonsterVisual(monsterID);
+			alert("Press 'OK' to attack!");
+			playerDamage = doRegularAttack(playerClass, determineRoll);
+			determineRoll = 0;
+			monsterHealth = monsterHealth - playerDamage;
+			if(monsterHealth <= 0){
+				monsterHealth = 0;
+				alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!  Hit 'OK' to proceed to the next turn.");
+				console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!");
+				removeMonsterPosition(monsterPosition, currentStage);
+				removeMonsterAwareness(monsterAwarenessArray, currentStage);
+				monsterEncounter = 2;
+			}else{
+				alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has " + monsterHealth + " health remaining.  Hit 'OK' to proceed to the next turn.");
+				console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has " + monsterHealth + " health remaining.");
+				
+				monsterDamage = getMonsterDamage(monsterID);
+				playerHealth = playerHealth - monsterDamage;
+				
+				if (playerHealth <= 0){
+					alert(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " remaining.  Hit 'OK to proceed to the next turn.");
+					console.log("You have been defeated by " + monsterName + "!  You lose!");
+					return alert("You have been defeated by " + monsterName + "!  You lose!");				
+				}
+				
+				alert(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " remaining.  Hit 'OK to proceed to the next turn.");
+				console.log(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " health remaining.");
+			}
+			
+			break;
+		}
+		
 		if (monsterEncounter === 0){
 			console.log("It is turn " + turnCount + ".  You are at stage " + currentStage + " with " + playerHealth + " health.");
-			for(let j = currentStage; j < currentStage + 15 && j < lastStage; j++){
-				if (!(monsterPosition[j] === "x")){
+			
+			for (let j = currentStage; j < currentStage + 15 && j < lastStage && monsterCanMove > 0; j++){
+				if (monsterAwarenessArray[j] === "a"){
+					monsterID = monsterPosition[j];
+					monsterName = getMonsterID(monsterID);
+					monsterAwarenessID = monsterAwarenessArray[j];
+					monsterMovement = getMonsterMovement(monsterID);
+					monsterCurrentPosition = j;
+					monsterPlayerPositionDifference = monsterCurrentPosition - currentStage;
+					
+					monsterPosition = moveMonsterPosition(monsterPosition, monsterMovement, monsterID, monsterCurrentPosition);
+					monsterAwarenessArray = moveMonsterAwareness(monsterAwarenessArray, monsterMovement, monsterAwarenessID, monsterCurrentPosition);
+					
+					alert(monsterName + " has rolled " + monsterMovement + " from stage " + monsterCurrentPosition +".  You are at " + currentStage + ".  Press 'OK' to proceed.");
+					console.log(monsterName + " has rolled " + monsterMovement + " from stage " + monsterCurrentPosition + ".  You are at " + currentStage + ".");
+				}
+				if (monsterMovement > monsterPlayerPositionDifference && !(monsterPosition[j] === "x")){
+					monsterEncounter = 1;
+					
+					alert("A monster reached you unprepared; they get to attack you without retaliation!  Press 'OK' to continue.");
+					console.log("A monster reached you unprepared; they get to attack you without retaliation!");
+					
+					monsterDamage = getMonsterDamage(monsterID);
+					playerHealth -= monsterDamage;
+					
+					alert(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " remaining.  Press 'OK' to proceed to the next step.");
+					console.log(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " health remaining.");
+					
+					if (restTurns > 0){
+						alert("Your rest action was interupted!  You will have to do a rest action after the battle to reinitiate it if you want to heal.  Press 'OK' to proceed to the next step.");
+						console.log("Your rest action was interupted!  You will have to do a rest action after the battle to reinitiate it if you want to heal.")
+						isResting = 0;
+						restTurns = 0;
+					}
+				}
+			}
+			
+			monsterCanMove = 0;
+			
+			if (restTurns > 0){
+				restTurns -= 1;
+				if (restTurns === 0){
+					playerHealth = startingHealth;
+					alert("You have fully rested up.  You're back to full health (" + playerHealth + ").");
+					isResting = 0;
+				}
+			}
+			
+			for (let j = currentStage; j < currentStage + 15 && j < lastStage && isResting === 0; j++){
+				if (!(monsterPosition[j] === "x") && restTurns === 0){
 					monsterCheck += 1;
 					
 					monsterID = monsterPosition[j];
@@ -74,7 +175,7 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 					monsterCurrentPosition = monsterDistanceFromPlayer + currentStage; //make adjustments so it lines up correctly in array
 					monsterPlayerPositionDifference = monsterCurrentPosition - currentStage;
 					//monsterStats = getMonsterStats(monsterPosition, j);
-					monsterStatsArray = setMonsterStats(monsterPosition, monsterDistanceFromPlayer, monsterStats, monsterCheck);
+					//monsterStatsArray = setMonsterStats(monsterPosition, monsterDistanceFromPlayer, monsterStats, monsterCheck);
 					monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck, monsterID, monsterCurrentPosition, monsterPlayerPositionDifference, monsterAwarenessArray);
 					
 					if (monsterID >= 0){
@@ -86,89 +187,108 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 					}
 					
 					console.log("A " + monsterName + " can be seen " + monsterDistanceFromPlayer + " stages ahead.  " + isMonsterAware);
+					monsterCanMove += 1;
 				}
-				
 			}
+			
 			console.log(monsterPosition);
 			console.log(monsterAwarenessArray);
-			if (!(playerClass === "mage")){
-				console.log("You can: roll to move the largest distance, or move one stage (moving one stage can sneak up on monsters, however might fail the closer you get)");
-				determineRoll = getMoveCommand(playerClass);
-				console.log(currentStage);
-				console.log(determineRoll);
+			if (isResting === 0){
+				if (!(playerClass === "mage" && monsterDistanceFromPlayer <= 12)){
+					if (playerHealth === startingHealth){
+						console.log("You can: roll to move the largest distance, move one stage (moving one stage can sneak up on monsters, however might fail the closer you get), or pass (stay put for one turn)");
+						determineRoll = getMoveCommand(playerClass);
+					}else{
+						getAction = getTurnCommand(playerClass, monsterDistanceFromPlayer, playerHealth, startingHealth);
+						if (getAction === "move"){
+							determineRoll = getMoveCommand(playerClass);
+						}
+						if (getAction === "rest"){
+							isResting = 1;
+							restTurns = getRestCommand(playerClass);
+						}
+					}
+				}else{	//if (playerClass === "mage" && monsterDistanceFromPlayer <=12){
+					getAction = getTurnCommand (playerClass, monsterDistanceFromPlayer, playerHealth, startingHealth);
+					if (getAction === "move"){
+						determineRoll = getMoveCommand(playerClass);
+					}
+					if (getAction === "rest"){
+						isResting = 1;
+						restTurns = getRestCommand(playerClass);
+					}
+					if (getAction === "attack"){
+						getMageCommand(playerClass);
+					}
+				}
+				//determine if monster is aware, have them move if player is resting, otherwise don't test for awareness if resting
+					console.log(currentStage);
+					console.log(determineRoll);
 				for (currentStage; monsterPosition[currentStage] === "x" && determineRoll > 0; currentStage){
 					determineRoll -= 1;
 					currentStage += 1;
+					stagesMoved += 1;
 					console.log(determineRoll);
 					console.log(currentStage);
 				}
 				if (!(monsterPosition[currentStage] === "x")){
 					monsterEncounter = 1;
+				}else{
+					console.log("You can: roll to move the largest distance, or move one stage (moving one stage can sneak up on monsters, however might fail the closer you get)");
+					determineRoll = getMoveCommand(playerClass);
+					for (currentStage; monsterPosition[currentStage] === "x" && determineRoll > 0 && isResting === 0; currentStage){
+						determineRoll -= 1;
+						currentStage += 1;
+						stagesMoved += 1;
+						console.log(determineRoll);
+						console.log(currentStage);
+					}
+					if (!(monsterPosition[currentStage] === "x")){
+						monsterEncounter = 1;
+					}
 				}
-			}else if (monsterDistanceFromPlayer <= 12){
-				console.log("You can: roll a 12 die to try a ranged attack (the number rolled is how many stages your attack can reach, an attack that doesn't travel far enough will alert the monster), roll to move the largest distance, or move one stage (moving one stage can sneak up on monsters, however might fail the closer you get)");
-				determineRoll = getMoveCommand(playerClass);
-				currentStage += determineRoll;
+				console.log("You advanced " + stagesMoved + " stages this turn.");
+				stagesMoved = 0;
+				if (monsterEncounter === 1 && monsterAwarenessArray[currentStage] === "s"){
+					monsterID = monsterPosition[currentStage];
+					monsterName = getMonsterID(monsterID);
+					console.log("You caught " + monsterName + " unaware, you get to attack without retaliation!");
+					alert("You caught a monster by surprise!");
+					playerDamage = doSurpriseAttack(playerClass, determineRoll);
+					determineRoll = 0;
+					
+					monsterHealth = getMonsterHealth(monsterID);
+					monsterHealth -= playerDamage;
+					if (monsterHealth < 0){
+						monsterHealth = 0;
+					}
+					if(monsterHealth <= 0){
+						monsterHealth = 0;
+						alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!  Hit 'OK' to proceed to the next turn.");
+						console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!");
+						removeMonsterPosition(monsterPosition, currentStage);
+						removeMonsterAwareness(monsterAwarenessArray, currentStage);
+						monsterEncounter = 2;
+					}else{
+						alert("You did " + playerDamage + " to " + monsterName + "!  "  + monsterName + " has " + monsterHealth + " health remaining.  Hit 'OK' to proceed to the next turn.")
+						console.log("You did " + playerDamage + " to " + monsterName + "!  "  + monsterName + " has " + monsterHealth + " health remaining.");
+						attacking = 1;
+					}
+				}
+				if (monsterEncounter === 1){
+					monsterID = monsterPosition[currentStage];
+					monsterName = getMonsterID(monsterID);
+					console.log("Battle with " +  monsterName + " will begin next turn!");
+					alert("Press 'OK' to end this turn");
+				}
 			}else{
-				console.log("You can: roll to move the largest distance, or move one stage (moving one stage can sneak up on monsters, however might fail the closer you get)");
-				determineRoll = getMoveCommand(playerClass);
-				for (currentStage; monsterPosition[currentStage] === "x" && determineRoll > 0; currentStage){
-					determineRoll -= 1;
-					currentStage += 1;
-					console.log(determineRoll);
-					console.log(currentStage);
-				}
-				if (!(monsterPosition[currentStage] === "x")){
-					monsterEncounter = 1;
-				}
-			}
-			if (monsterEncounter === 1 && monsterAwarenessArray[currentStage] === "s"){
-				monsterID = monsterPosition[currentStage];
-				monsterName = getMonsterID(monsterID);
-				console.log("You caught " + monsterName + " unaware, you get to attack without retaliation!");
-				alert("You caught a monster by surprise!");
-				playerDamage = doSurpriseAttack(playerClass, determineRoll);
-				determineRoll = 0;
-				
-				monsterHealth = getMonsterHealth(monsterID);
-				monsterHealth = monsterHealth - playerDamage;
-				if (monsterHealth < 0){
-					monsterHealth = 0;
-				}
-				alert("You did " + playerDamage + " to " + monsterName + "!  "  + monsterName + " has " + monsterHealth + " health remaining.  Hit 'OK' to proceed to the next turn.")
-				
-			}
-			if (monsterEncounter === 1){
-				monsterID = monsterPosition[currentStage];
-				monsterName = getMonsterID(monsterID);
-				console.log("Battle with " +  monsterName + " will begin next turn!");
-				alert("Press 'OK' to end this turn");
+				alert("You are currently resting.  There are " + restTurns + " left until you are fully healed.  Press 'OK' to end this turn.");
+				console.log("You are currently resting.  There are " + restTurns + " left until you are fully healed.");
 			}
 		}
-		if (monsterEncounter === 1){
-			monsterID = monsterPosition[currentStage];
-			monsterName = getMonsterID(monsterID);
-			console.log("In battle with " + monsterName + "!");
-			getMonsterVisual(monsterID);
-			alert("Press 'OK' to attack!");
-			playerDamage = doRegularAttack(playerClass, determineRoll);
-			determineRoll = 0;
-			//add getMonsterHealth() and change the reference above so it doesn't overwrite
-			monsterHealth = monsterHealth - playerDamage;
-			
-			alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has" + monsterHealth + " health remaining.  Hit 'OK' to proceed to the next step.");
-			console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has " + monsterHealth + " health remaining.");
-			
-			monsterDamage = getMonsterDamage(monsterID);
-			playerHealth = playerHealth - monsterDamage;
-			
-			alert(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " remaining.  Hit 'OK to proceed to the next turn.");
-			console.log(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " health remaining.");
-			
-			
-			break;
+		if(monsterEncounter === 2){
+			monsterEncounter = 0;
 		}
-		
 		//break;
 	}
 	
@@ -213,7 +333,7 @@ function calculateMist(playerClass){
 }
 
 function randomizeMonsters(playerClass){
-	let monsterChance = calculate4Roll(playerClass);
+	let monsterChance = calculate4Roll(playerClass) + 3;
 	return monsterChance;
 }
 
@@ -559,7 +679,7 @@ function declareMonsterAwareness (monster, monsterPosition, monsterAwarenessArra
 		
 	// }
 	if (monsterAwarenessArray[monsterAwarenessIndex] === "a"){
-		isAware = "It noticed you and is aware of you're position!  It will move towards you next turn and any attack engaged will result in a counterattack! (unless you knock this monster out in one blow or are using a ranged attack(Mage))";
+		isAware = "It noticed you and is aware of you're position!  It will move towards you next turn and any attack engaged will result in a counterattack! (unless you knock this monster out in one blow or are using a ranged attack(Mage).  If the monster moves onto you after you end your turn, it will interupt any 'rest' action that might be happening and attack you without you being able to attack back!)";
 		return isAware;
 	}
 	
@@ -712,6 +832,52 @@ function setMonsterStats (monsterPosition, j, monsterStats, monsterCheck){
 	
 }
 
+function moveMonsterPosition(monsterPosition, monsterMovement, monsterID, monsterCurrentPosition){
+	monsterPosition.splice(monsterCurrentPosition, 1, "x");
+	let newPlacement = monsterCurrentPosition;
+	for (monsterMovement; monsterMovement > 0; monsterMovement --){	
+		if (!(monsterPosition[newPlacement] === "x")){
+			monsterPosition.splice(newPlacement + 1, 1, monsterID);
+			return monsterPosition;
+		} 
+		newPlacement -= 1;
+	}
+	if	(monsterMovement === 0){
+		monsterPosition.splice(newPlacement, 1, monsterID);
+	}
+	console.log(monsterPosition);
+	return monsterPosition;
+}
+
+function moveMonsterAwareness(monsterAwarenessArray, monsterMovement, monsterAwarenessID, monsterCurrentPosition){
+	monsterAwarenessArray.splice(monsterCurrentPosition, 1, "x");
+	let newPlacement = monsterCurrentPosition;
+	for (monsterMovement; monsterMovement > 0; monsterMovement --){	
+		if (!(monsterAwarenessArray[newPlacement] === "x")){
+			monsterAwarenessArray.splice(newPlacement + 1, 1, monsterAwarenessID);
+			return monsterAwarenessArray;
+		} 
+		newPlacement -= 1;
+	}
+	if	(monsterMovement === 0){
+		monsterAwarenessArray.splice(newPlacement, 1, monsterAwarenessID);
+	}
+	console.log(monsterAwarenessArray);
+	return monsterAwarenessArray;
+}
+
+function removeMonsterPosition(monsterPosition, currentStage){
+	monsterPosition.splice(currentStage, 1, "v");
+	console.log(monsterPosition);
+	return monsterPosition;
+}
+
+function removeMonsterAwareness(monsterAwarenessArray, currentStage){
+	monsterAwarenessArray.splice(currentStage, 1, "d");
+	console.log(monsterAwarenessArray);
+	return monsterAwarenessArray;
+}
+
 function classHealth (playerClass){
 	let health;
 	if (playerClass === "warrior"){
@@ -747,10 +913,36 @@ function classHealth (playerClass){
 	}	
 }
 
+function getTurnCommand (playerClass){
+	
+	let input;
+	let action;
+	while (1){
+		if (playerClass === "warrior" || playerClass === "rogue"){
+			input = prompt("What would you like to do next? ('move' (with the option to stay put for one turn) or 'rest' (full heal after 3 turns without movement however can be interupted if a monster is aware of you)");
+		}else{
+			input = prompt("What would you like to do next? ('move' (with the option to stay put for one turn), 'rest' (fully heal yourself using 1 turn without movement), or 'attack')");
+		}
+		if (input === "move"){
+			action = "move";//getMoveCommand(playerClass);
+			return action;
+		}
+		if (input === "rest"){
+			action = "rest";//getRestCommand(playerClass);
+			return action;
+		}
+		if (playerClass === "mage" && input === "attack"){
+			action = "attack";//getMageCommand(playerClass);
+			return action;
+		}
+		alert("Your input wasn't valid.  Try again.");
+	}
+}
+
 function getMoveCommand (playerClass){
 	
 	
-	let move = prompt("Type 'move' or '+1'");
+	let move = prompt("Type 'move' '+1' or 'pass'");
 	let movement;
 	
 	while(1){
@@ -760,9 +952,9 @@ function getMoveCommand (playerClass){
 			return movement;
 		}
 		
-		if(!(move === "move" || move === "+1")){
-			alert("Your input wasn't valid.  Try again (type 'move' or '+1' exactly)");						
-			move = prompt("Type 'move' or '+1'");
+		if(!(move === "move" || move === "+1" || move === "pass")){
+			alert("Your input wasn't valid.  Try again (type 'move' '+1' or 'pass' exactly)");						
+			move = prompt("Type 'move' '+1' or 'pass'");
 		}
 		if (move === "+1"){
 			movement = 1;
@@ -780,7 +972,21 @@ function getMoveCommand (playerClass){
 				movement = calculate10Roll(playerClass);
 				return movement;
 			}
+		}else if (move === "pass"){
+			movement = 0;
+			return movement;
 		}
+	}
+}
+
+function getRestCommand (playerClass){
+	let heal = 0;	//turn count required
+	if (playerClass === "mage"){
+		heal = 1;
+		return heal;
+	}else{
+		heal = 3;
+		return heal;
 	}
 }
 
@@ -813,7 +1019,7 @@ function doSurpriseAttack (playerClass, determineRoll){
 		
 }
 
-function doRegularAttack (playerClass){
+function doRegularAttack (playerClass, determineRoll){
 	let damageDealt = 0;
 	let minimumDamage = 0;
 	
