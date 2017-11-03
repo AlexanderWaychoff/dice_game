@@ -34,6 +34,7 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 	let monsterStatsArray;
 	let monsterAwarenessArray;
 	let monsterAwarenessID;
+	let setIndexDifference = 0;
 	
 	let monsterDamage = 0;
 	let monsterCanMove = 0;	//0 = false, 1 = true
@@ -118,26 +119,33 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 		if (monsterEncounter === 0){
 			console.log("It is turn " + turnCount + ".  You are at stage " + currentStage + " with " + playerHealth + " health.");
 			
-			for (let j = currentStage; j < currentStage + 15 && j < lastStage && monsterCanMove > 0; j++){
+			for (let j = currentStage - 1; j < currentStage + 15 && j < lastStage && monsterCanMove > 0; j++){
 				if (monsterAwarenessArray[j] === "a"){
 					monsterID = monsterPosition[j];
 					monsterName = getMonsterID(monsterID);
 					monsterAwarenessID = monsterAwarenessArray[j];
+					
 					monsterMovement = getMonsterMovement(monsterID);
-					monsterCurrentPosition = j;
-					monsterPlayerPositionDifference = monsterCurrentPosition - currentStage;
+					monsterDistanceFromPlayer =  j - currentStage;
 					
-					monsterPosition = moveMonsterPosition(monsterPosition, monsterMovement, monsterID, monsterCurrentPosition);
-					monsterAwarenessArray = moveMonsterAwareness(monsterAwarenessArray, monsterMovement, monsterAwarenessID, monsterCurrentPosition);
+					if (monsterMovement > monsterDistanceFromPlayer){
+						monsterMovement = monsterDistanceFromPlayer;
+					}
 					
-					alert(monsterName + " has rolled " + monsterMovement + " from stage " + monsterCurrentPosition +".  You are at " + currentStage + ".  Press 'OK' to proceed.");
-					console.log(monsterName + " has rolled " + monsterMovement + " from stage " + monsterCurrentPosition + ".  You are at " + currentStage + ".");
+					monsterCurrentPosition = monsterDistanceFromPlayer + currentStage;
+					//monsterPlayerPositionDifference = monsterCurrentPosition - currentStage + 1;
+					
+					monsterPosition = moveMonsterPosition(monsterPosition, monsterMovement, monsterID, monsterCurrentPosition, currentStage);
+					monsterAwarenessArray = moveMonsterAwareness(monsterAwarenessArray, monsterMovement, monsterAwarenessID, monsterCurrentPosition, currentStage);
+					
+					alert(monsterName + " has rolled " + monsterMovement + " from stage " + monsterCurrentPosition + ".  You are at stage " + currentStage + ".  Press 'OK' to proceed.");
+					console.log(monsterName + " has rolled " + monsterMovement + " from stage " + monsterCurrentPosition + ".  You are at stage " + currentStage + ".");
 				}
-				if (monsterMovement > monsterPlayerPositionDifference && !(monsterPosition[j] === "x")){
+				if (monsterMovement >= monsterDistanceFromPlayer && !(monsterPosition[j] === "x")){
 					monsterEncounter = 1;
 					
-					alert("A monster reached you unprepared; they get to attack you without retaliation!  Press 'OK' to continue.");
-					console.log("A monster reached you unprepared; they get to attack you without retaliation!");
+					alert(monsterName + " has reached you unprepared; they get to attack you without retaliation!  Press 'OK' to continue.");
+					console.log("A " + monsterName + " reached you unprepared; they get to attack you without retaliation!");
 					
 					monsterDamage = getMonsterDamage(monsterID);
 					playerHealth -= monsterDamage;
@@ -173,10 +181,12 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 					monsterDistanceFromPlayer =  j - currentStage;
 					monsterName = getMonsterID(monsterID);				//displays text of monster name to player
 					monsterCurrentPosition = monsterDistanceFromPlayer + currentStage; //make adjustments so it lines up correctly in array
-					monsterPlayerPositionDifference = monsterCurrentPosition - currentStage;
+					monsterPlayerPositionDifference = monsterCurrentPosition - currentStage + 1;
 					//monsterStats = getMonsterStats(monsterPosition, j);
 					//monsterStatsArray = setMonsterStats(monsterPosition, monsterDistanceFromPlayer, monsterStats, monsterCheck);
 					monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck, monsterID, monsterCurrentPosition, monsterPlayerPositionDifference, monsterAwarenessArray);
+					
+					//setIndexDifference = monsterDistanceFromPlayer - 1;
 					
 					if (monsterID >= 0){
 						//monsterCurrentPosition = monsterDistanceFromPlayer + ;
@@ -193,8 +203,8 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 			
 			console.log(monsterPosition);
 			console.log(monsterAwarenessArray);
-			if (isResting === 0){
-				if (!(playerClass === "mage" && monsterDistanceFromPlayer <= 12)){
+			if (isResting === 0 && monsterEncounter === 0){
+				if (!(playerClass === "mage") && monsterDistanceFromPlayer <= 12){
 					if (playerHealth === startingHealth){
 						console.log("You can: roll to move the largest distance, move one stage (moving one stage can sneak up on monsters, however might fail the closer you get), or pass (stay put for one turn)");
 						determineRoll = getMoveCommand(playerClass);
@@ -224,7 +234,17 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 				//determine if monster is aware, have them move if player is resting, otherwise don't test for awareness if resting
 					console.log(currentStage);
 					console.log(determineRoll);
-				for (currentStage; monsterPosition[currentStage] === "x" && determineRoll > 0; currentStage){
+				// for (currentStage; monsterPosition[currentStage] === "x" && determineRoll > 0 && isResting === 0; currentStage){
+					// determineRoll -= 1;
+					// currentStage += 1;
+					// stagesMoved += 1;
+					// console.log(determineRoll);
+					// console.log(currentStage);
+				// }
+				// if (!(monsterPosition[currentStage] === "x")){
+					// monsterEncounter = 1;
+				// }else{
+				for (currentStage; monsterPosition[currentStage] === "x" && determineRoll > 0 && isResting === 0; currentStage){
 					determineRoll -= 1;
 					currentStage += 1;
 					stagesMoved += 1;
@@ -233,20 +253,8 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 				}
 				if (!(monsterPosition[currentStage] === "x")){
 					monsterEncounter = 1;
-				}else{
-					console.log("You can: roll to move the largest distance, or move one stage (moving one stage can sneak up on monsters, however might fail the closer you get)");
-					determineRoll = getMoveCommand(playerClass);
-					for (currentStage; monsterPosition[currentStage] === "x" && determineRoll > 0 && isResting === 0; currentStage){
-						determineRoll -= 1;
-						currentStage += 1;
-						stagesMoved += 1;
-						console.log(determineRoll);
-						console.log(currentStage);
-					}
-					if (!(monsterPosition[currentStage] === "x")){
-						monsterEncounter = 1;
-					}
 				}
+				
 				console.log("You advanced " + stagesMoved + " stages this turn.");
 				stagesMoved = 0;
 				if (monsterEncounter === 1 && monsterAwarenessArray[currentStage] === "s"){
@@ -275,16 +283,16 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 						attacking = 1;
 					}
 				}
-				if (monsterEncounter === 1){
-					monsterID = monsterPosition[currentStage];
-					monsterName = getMonsterID(monsterID);
-					console.log("Battle with " +  monsterName + " will begin next turn!");
-					alert("Press 'OK' to end this turn");
-				}
-			}else{
+			}else if (isResting === 1){
 				alert("You are currently resting.  There are " + restTurns + " left until you are fully healed.  Press 'OK' to end this turn.");
 				console.log("You are currently resting.  There are " + restTurns + " left until you are fully healed.");
 			}
+		}
+		if (monsterEncounter === 1){
+			monsterID = monsterPosition[currentStage];
+			monsterName = getMonsterID(monsterID);
+			console.log("Battle with " +  monsterName + " will begin next turn!");
+			alert("Press 'OK' to end this turn");
 		}
 		if(monsterEncounter === 2){
 			monsterEncounter = 0;
@@ -768,7 +776,7 @@ function getMonsterID (monsterID){
 	
 	let monsterName;
 	if (monsterID === 0){
-		monsterName = "Mustachio";
+		monsterName = "Mr. Mustachio";
 		return monsterName;
 	}
 	if (monsterID === 1){
@@ -832,11 +840,11 @@ function setMonsterStats (monsterPosition, j, monsterStats, monsterCheck){
 	
 }
 
-function moveMonsterPosition(monsterPosition, monsterMovement, monsterID, monsterCurrentPosition){
+function moveMonsterPosition(monsterPosition, monsterMovement, monsterID, monsterCurrentPosition, currentStage){
 	monsterPosition.splice(monsterCurrentPosition, 1, "x");
 	let newPlacement = monsterCurrentPosition;
 	for (monsterMovement; monsterMovement > 0; monsterMovement --){	
-		if (!(monsterPosition[newPlacement] === "x")){
+		if (!(monsterPosition[newPlacement] === "x") && newPlacement > currentStage){
 			monsterPosition.splice(newPlacement + 1, 1, monsterID);
 			return monsterPosition;
 		} 
@@ -849,11 +857,11 @@ function moveMonsterPosition(monsterPosition, monsterMovement, monsterID, monste
 	return monsterPosition;
 }
 
-function moveMonsterAwareness(monsterAwarenessArray, monsterMovement, monsterAwarenessID, monsterCurrentPosition){
+function moveMonsterAwareness(monsterAwarenessArray, monsterMovement, monsterAwarenessID, monsterCurrentPosition, currentStage){
 	monsterAwarenessArray.splice(monsterCurrentPosition, 1, "x");
 	let newPlacement = monsterCurrentPosition;
 	for (monsterMovement; monsterMovement > 0; monsterMovement --){	
-		if (!(monsterAwarenessArray[newPlacement] === "x")){
+		if (!(monsterAwarenessArray[newPlacement] === "x") && newPlacement > currentStage){
 			monsterAwarenessArray.splice(newPlacement + 1, 1, monsterAwarenessID);
 			return monsterAwarenessArray;
 		} 
