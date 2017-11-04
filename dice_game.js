@@ -930,15 +930,15 @@ function classHealth (playerClass){
 	if (playerClass === "warrior"){
 		console.log("Warrior.  The one who takes fights head on and forces their way through.");
 		console.log("Warriors move between 2-6 spaces, can do up to 20 damage and said damage also gets a minimum roll between 6-12, so should you get a unlucky low roll there's a chance to have decent minimum damage.");
-		console.log("Warriors have 100 health and can block up to 8 damage on attacks received from monsters.");
-		console.log("Press 'OK' above to continue when you're ready, or if you want to change class refresh the page to start over.");
+		//console.log("Warriors have 100 health and can block up to 8 damage on attacks received from monsters.");
+		console.log("Warriors have 100 health.  Press 'OK' above to continue when you're ready, or if you want to change class refresh the page to start over.");
 		health = 100;
 		alert("Press 'OK' when you're ready to continue.");
 		return health;
 		
 	}else if (playerClass === "mage"){
 		console.log("Mage.  Long range casters who fight using their wit and intellect.");
-		console.log("Mages move between 3-8 spaces, can do up to 12 ranged damage with a chance to do critical damage (up to 4 times more) however are stunned for one turn afterwards.");
+		console.log("Mages move between 3-8 spaces, can do up to 12 ranged damage with a chance to do critical damage (up to 4 times more).");
 		console.log("Mages can also only take one turn to fully heal (instead of 3).");
 		console.log("Mages have 50 health.  Press 'OK' above to continue when you're ready, or if you want to change class refresh the page to start over.");
 		health = 50;
@@ -946,12 +946,10 @@ function classHealth (playerClass){
 		return health;
 		
 	}else{
-		console.log("Rogue.  Specializes mostly in evasion, this quick class can move very quickly, but can easily get overwhelmed if too many wrong moves are made.");
+		console.log("Rogue.  Specializes mostly in speed and evasion, this class can move very quickly, but can easily get overwhelmed if too many wrong moves are made.");
 		console.log("Rogues move between 4-10 spaces, can do up to 8 damage times the number of stages they would have moved past the monster.");
-		console.log("Able to stun the monster instead for 1-4 turns plus the number of stages they move past the monster.");
-		console.log("Rogues have 70 health.");
-		console.log("Press 'OK' above to continue when you're ready, or if you want to change");
-		console.log("class refresh the page to start over.")
+		//console.log("Able to stun the monster instead for 1-4 turns plus the number of stages they move past the monster.");
+		console.log("Rogues have 70 health.  Press 'OK' above to continue when you're ready, or if you want to change class refresh the page to start over.");
 		health = 70;		
 		alert("Press 'OK' when you're ready to continue.");
 
