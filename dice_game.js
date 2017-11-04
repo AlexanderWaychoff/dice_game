@@ -2,6 +2,11 @@ describeGame ();
 
 
 function describeGame(){
+	let refresh = prompt ("If this is the first time loading this page, type 'exit' to stop the game.  Hit 'F12' to reveal the console log after typing 'exit' then refresh the page.  If you completed this step hit 'Cancel'.");
+	if (refresh === "exit"){
+		return;
+	}
+	
 	console.log("Welcome to my dice game.  The goal is to reach stage 100 while surviving.");
 	console.log("Monsters can be defeated or ran past, however if you run past and they catch up to you it could mean game over!");
 	console.log("Please choose a class between : warrior, mage, or rogue to play as.  Each has their strengths and weaknesses so choose wisely.")
@@ -9,7 +14,6 @@ function describeGame(){
 	let playerClass = getPlayerClass ();
 	let playerHealth = classHealth (playerClass);
 	console.log(playerHealth);
-
 	let gameEnder = calculateMist (playerClass);
 	let monsterRandom = randomizeMonsters(playerClass);
 	let monsterCount = calculateMonsterAmount (playerClass, monsterRandom);
@@ -40,6 +44,7 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 	let monsterDamage = 0;
 	let monsterCanMove = 0;	//0 = false, 1 = true
 	let monsterMovement = 0;
+	let monsterApproached = 0;	//0 = false, 1 true
 	
 	
 	monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck);
@@ -64,40 +69,57 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 		turnCount += 1;
 		if (turnCount >= gameEnder){
 			if (turnCount === gameEnder){
+				alert("The mist has appeared.  The time to reach the end is running out!");
 				console.log("The mist has appeared.  The time to reach the end is running out!");
 			}
-			mistMovement = calculate10Roll() + 3;
+			mistMovement = calculate10Roll() + 1;
 			mistStage += mistMovement;
-			console.log("The mist has reached stage " + mistStage + ".  Don't let it reach you!")
+			alert("The mist has reached stage " + mistStage + ".  You are at stage " + currentStage + ".  Don't let it reach you!");
+			console.log("The mist has reached stage " + mistStage + ".  You are at stage " + currentStage + ".  Don't let it reach you!");
 			if (mistStage >= currentStage){
+				alert("The mist caught up to you.  You lose!");
 				return console.log("The mist caught up to you.  You lose!");
 			}
 		}
 		
 		if (monsterEncounter === 1){
 			console.log("It is turn " + turnCount + ".  You are at stage " + currentStage + " with " + playerHealth + " health.");
-			monsterID = monsterPosition[currentStage];
-			console.log(attacking);
+			
+			if (monsterApproached === 1){
+				monsterID = monsterPosition[currentStage];			
+			}else{monsterID = monsterPosition[currentStage - 1];
+			}
+			
 			
 			if (attacking === 0){
 				monsterHealth = getMonsterHealth(monsterID);
 			}
+			console.log(monsterHealth);
 			attacking = 1;
-			console.log(attacking);
 			monsterName = getMonsterID(monsterID);
 			console.log("In battle with " + monsterName + "!");
 			getMonsterVisual(monsterID);
 			alert("Press 'OK' to attack!");
 			playerDamage = doRegularAttack(playerClass, determineRoll);
 			determineRoll = 0;
-			monsterHealth = monsterHealth - playerDamage;
+			monsterHealth -= playerDamage;
 			if(monsterHealth <= 0){
 				monsterHealth = 0;
 				alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!  Hit 'OK' to proceed to the next turn.");
 				console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!");
-				removeMonsterPosition(monsterPosition, currentStage);
-				removeMonsterAwareness(monsterAwarenessArray, currentStage);
+				
+				if (monsterApproached === 1){
+					indexStage = currentStage + 1;
+				}else{
+					indexStage = currentStage;
+				}
+				
+				removeMonsterPosition(monsterPosition, indexStage);
+				removeMonsterAwareness(monsterAwarenessArray, indexStage);
 				monsterEncounter = 2;
+				attacking = 0;
+				monsterApproached = 0;
+				//currentStage += 1;
 			}else{
 				alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has " + monsterHealth + " health remaining.  Hit 'OK' to proceed to the next turn.");
 				console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has " + monsterHealth + " health remaining.");
@@ -115,7 +137,7 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 				console.log(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " health remaining.");
 			}
 			
-			break;
+			//break;
 		}
 		
 		if (monsterEncounter === 0){
@@ -148,6 +170,7 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 				}
 				if (monsterMovement === monsterDistanceFromPlayer && !(monsterPosition[currentStage] === "x") && !(monsterEncounter === 1)){
 					monsterEncounter = 1;
+					monsterApproached = 1;
 					
 					alert(monsterName + " has reached you unprepared; they get to attack you without retaliation!  Press 'OK' to continue.");
 					console.log("A " + monsterName + " reached you unprepared; they get to attack you without retaliation!");
@@ -206,8 +229,6 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 				}
 			}
 			
-			console.log(monsterPosition);
-			console.log(monsterAwarenessArray);
 			if (isResting === 0 && monsterEncounter === 0){
 				if (!(playerClass === "mage") && monsterDistanceFromPlayer <= 12){
 					if (playerHealth === startingHealth){
@@ -249,7 +270,7 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 				// if (!(monsterPosition[currentStage] === "x")){
 					// monsterEncounter = 1;
 				// }else{
-				for (indexStage; monsterPosition[indexStage] === "x" && determineRoll > 0 && isResting === 0; indexStage){
+				for (currentStage; (monsterPosition[currentStage - 1] === "x" || monsterPosition[currentStage - 1] === "v") && determineRoll > 0 && isResting === 0; currentStage){
 					determineRoll -= 1;
 					currentStage += 1;
 					stagesMoved += 1;
@@ -257,14 +278,14 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 					console.log(currentStage);
 					indexStage = currentStage - 1;
 				}
-				if (!(monsterPosition[indexStage] === "x")){
+				if (!(monsterPosition[indexStage] === "x" || monsterPosition[indexStage] === "v")){
 					monsterEncounter = 1;
 				}
 				
 				console.log("You advanced " + stagesMoved + " stages this turn.");
 				stagesMoved = 0;
-				if (monsterEncounter === 1 && monsterAwarenessArray[indexStage] === "s"){
-					monsterID = monsterPosition[currentStage];
+				if (monsterEncounter === 1 && monsterAwarenessArray[currentStage - 1] === "s"){
+					monsterID = monsterPosition[currentStage - 1];
 					monsterName = getMonsterID(monsterID);
 					console.log("You caught " + monsterName + " unaware, you get to attack without retaliation!");
 					alert("You caught a monster by surprise!");
@@ -280,9 +301,16 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 						monsterHealth = 0;
 						alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!  Hit 'OK' to proceed to the next turn.");
 						console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!");
-						removeMonsterPosition(monsterPosition, currentStage);
-						removeMonsterAwareness(monsterAwarenessArray, currentStage);
+						if (monsterApproached === 1){
+							indexStage = currentStage + 1;
+						}else{
+							indexStage = currentStage;
+						}
+						removeMonsterPosition(monsterPosition, indexStage);
+						removeMonsterAwareness(monsterAwarenessArray, indexStage);
+						attacking = 0;
 						monsterEncounter = 2;
+						monsterApproached = 0;
 					}else{
 						alert("You did " + playerDamage + " to " + monsterName + "!  "  + monsterName + " has " + monsterHealth + " health remaining.  Hit 'OK' to proceed to the next turn.")
 						console.log("You did " + playerDamage + " to " + monsterName + "!  "  + monsterName + " has " + monsterHealth + " health remaining.");
@@ -295,7 +323,11 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 			}
 		}
 		if (monsterEncounter === 1){
-			monsterID = monsterPosition[currentStage];
+			if (monsterApproached === 1){
+				monsterID = monsterPosition[currentStage];
+			}else{
+				monsterID = monsterPosition[currentStage - 1];
+			}
 			monsterName = getMonsterID(monsterID);
 			console.log("Battle with " +  monsterName + " will begin next turn!");
 			alert("Press 'OK' to end this turn");
@@ -332,18 +364,18 @@ function getPlayerClass() {
 
 function calculateMist(playerClass){
 	
-	let mist = 0;
+	let mist = 60;
 	let endStage = 100;
 	
-	if (playerClass === "warrior"){
-		mist = Math.floor(endStage/3);
-	}
-	if (playerClass === "mage"){
-		mist = Math.floor(endStage/4);
-	}
-	if (playerClass === "rogue"){
-		mist = Math.floor(endStage/5);
-	}
+	// if (playerClass === "warrior"){
+		// mist = Math.floor(endStage/3);
+	// }
+	// if (playerClass === "mage"){
+		// mist = Math.floor(endStage/4);
+	// }
+	// if (playerClass === "rogue"){
+		// mist = Math.floor(endStage/5);
+	// }
 	return mist;
 }
 
@@ -645,7 +677,7 @@ function getMonsterVisual (monsterID){
 	}
 	if (monsterID === 5){
 		console.log("| v  ___  v |   ( | | |( )");
-		console.log("|____________|   \      |");
+		console.log("|____________|   |      |");
 		return;
 	}
 	if (monsterID === 6){
@@ -1018,6 +1050,7 @@ function doSurpriseAttack (playerClass, determineRoll){
 			}
 			return damageDealt;
 		}
+		return damageDealt;
 	}
 	if (playerClass === "mage"){
 		damageDealt = calculate12Roll();
@@ -1047,6 +1080,7 @@ function doRegularAttack (playerClass, determineRoll){
 			}
 			return damageDealt;
 		}
+		return damageDealt;
 	}
 	if (playerClass === "mage"){
 		damageDealt = calculate12Roll();
