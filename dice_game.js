@@ -9,7 +9,7 @@ function describeGame(){
 	
 	console.log("Welcome to my dice game.  The goal is to reach stage 100 while surviving.");
 	console.log("Monsters can be defeated or ran past, however if you run past and they catch up to you it could mean game over!");
-	console.log("Please choose a class between : warrior, mage, or rogue to play as.  Each has their strengths and weaknesses so choose wisely.")
+	console.log("Please choose a class between : warrior, or rogue to play as.  Each has their strengths and weaknesses so choose wisely.")
 	console.log("");
 	let playerClass = getPlayerClass ();
 	let playerHealth = classHealth (playerClass);
@@ -45,6 +45,13 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 	let monsterCanMove = 0;	//0 = false, 1 = true
 	let monsterMovement = 0;
 	let monsterApproached = 0;	//0 = false, 1 true
+	let neanderthalResponse;
+	let neanderthalCombatTotal = 0;
+	let neanderthalNegotiateTotal = 0;
+	let neanderthalPassTotal = 0;
+	let neanderthalCombatStarted = 0;
+	let increaseNeanderthalNegotiateOdds = 0;
+	let increaseNeanderthalPassOdds = 0;
 	
 	
 	monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck);
@@ -72,7 +79,7 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 				alert("The mist has appeared.  The time to reach the end is running out!");
 				console.log("The mist has appeared.  The time to reach the end is running out!");
 			}
-			mistMovement = calculate10Roll() + 1;
+			mistMovement = calculate8Roll() + 1;
 			mistStage += mistMovement;
 			alert("The mist has reached stage " + mistStage + ".  You are at stage " + currentStage + ".  Don't let it reach you!");
 			console.log("The mist has reached stage " + mistStage + ".  You are at stage " + currentStage + ".  Don't let it reach you!");
@@ -94,49 +101,98 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 			if (attacking === 0){
 				monsterHealth = getMonsterHealth(monsterID);
 			}
-			console.log(monsterHealth);
 			attacking = 1;
 			monsterName = getMonsterID(monsterID);
-			console.log("In battle with " + monsterName + "!");
-			getMonsterVisual(monsterID);
-			alert("Press 'OK' to attack!");
-			playerDamage = doRegularAttack(playerClass, determineRoll);
-			determineRoll = 0;
-			monsterHealth -= playerDamage;
-			if(monsterHealth <= 0){
-				monsterHealth = 0;
-				alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!  Hit 'OK' to proceed to the next turn.");
-				console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!");
+			if (monsterID === 6 && neanderthalCombatStarted === 0){
+				getMonsterVisual(monsterID);
+				console.log("A Neanderthal blocks the way.  What do you do?");
+				neanderthalResponse = prompt("'ask' him politely to move, try to 'find' a way around, or 'attack'.");
+				neanderthalResponse = neanderthalResponse.toLowerCase();
 				
-				if (monsterApproached === 1){
-					indexStage = currentStage + 1;
-				}else{
-					indexStage = currentStage;
+				if (neanderthalResponse === "ask"){
+					neanderthalNegotiateTotal += calculate10Roll();
+					if (neanderthalNegotiateTotal >= 23){
+						alert("He grunts something unintelligible and looks at you.  You point past him in hopes of conveying your message.  After an awkward moment some drool falls from his bottom lip.  He scratches his side and walks away.  With the path cleared you are able to exit the map.  Congratulations, you win!");
+						console.log("You managed to convince him to move which allows you to get past stage 100.  Congratulations, you win!");
+						return;
+					}else{
+						alert("He grunts at you, seemingly unconvinced.");
+					}
+				}else if (neanderthalResponse === "find"){
+					if (playerClass === "warrior"){
+						neanderthalPassTotal += calculate6Roll(playerClass);
+					}
+					if (playerClass === "rogue"){
+						neanderthalPassTotal += calculate10Roll(playerClass);
+					}
+					if (neanderthalPassTotal > 32){
+						console.log("You found a path past Neanderthal which allows you to get past stage 100.  Congratulations, you win!");
+						alert("Finally after moving about him you find a way through.  With successful passage you're able to clear stage 100.  Congratulations, you win!");
+						return;
+					}else{
+						console.log("You might see a way through, but he randomly shifts his position while looking off in the distance.  His random shift requires you to look around and try again.");
+						alert("You might see a way through, but he randomly shifts his position while looking off in the distance.  His random shift requires you to look around and try again.");
+					}
+				}else if (neanderthalResponse === "attack"){
+					neanderthalCombatTotal += 1;
+					alert("He grunts in annoyance.");
+					console.log("He grunts in annoyance.");
+					if (neanderthalCombatTotal === 2){
+						console.log("The neanderthal roars in rage.  Battle with Neanderthal will begin next turn!");
+						alert("The neanderthal roars in rage.  Battle with Neanderthal will begin next turn!");
+						neanderthalCombatStarted = 1;
+					}
+				}else {
+					console.log("You're response wasn't typed correctly. A turn was wasted in the process.  Try again.");
+					alert("The Neanderthal scratches his side, your unintelligible response didn't seem to reach his ears.");
 				}
-				
-				removeMonsterPosition(monsterPosition, indexStage);
-				removeMonsterAwareness(monsterAwarenessArray, indexStage);
-				monsterEncounter = 2;
-				attacking = 0;
-				monsterApproached = 0;
-				//currentStage += 1;
 			}else{
-				alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has " + monsterHealth + " health remaining.  Hit 'OK' to proceed to the next turn.");
-				console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has " + monsterHealth + " health remaining.");
 				
-				monsterDamage = getMonsterDamage(monsterID);
-				playerHealth = playerHealth - monsterDamage;
-				
-				if (playerHealth <= 0){
+				console.log("In battle with " + monsterName + "!");
+				getMonsterVisual(monsterID);
+				alert("Press 'OK' to attack!");
+				playerDamage = doRegularAttack(playerClass, determineRoll);
+				determineRoll = 0;
+				monsterHealth -= playerDamage;
+				if(monsterHealth <= 0){
+					monsterHealth = 0;
+					alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!  Hit 'OK' to proceed to the next turn.");
+					console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has been defeated!");
+					
+					if (monsterID === 6){
+						alert("The Neanderthal groans and falls backward as you deliver the finishing blow.  With him knocked out you are able to clear stage 100.  Congratulations, you win!");
+						console.log("The Neanderthal groans and falls backward as you deliver the finishing blow.  With him knocked out you are able to clear stage 100.  Congratulations, you win!");
+					}
+					
+					if (monsterApproached === 1){
+						indexStage = currentStage + 1;
+					}else{
+						indexStage = currentStage;
+					}
+					
+					removeMonsterPosition(monsterPosition, indexStage);
+					removeMonsterAwareness(monsterAwarenessArray, indexStage);
+					monsterEncounter = 2;
+					attacking = 0;
+					monsterApproached = 0;
+					//currentStage += 1;
+				}else{
+					alert("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has " + monsterHealth + " health remaining.  Hit 'OK' to proceed to the next turn.");
+					console.log("You did " + playerDamage + " to " + monsterName + "!  " + monsterName + " has " + monsterHealth + " health remaining.");
+					
+					monsterDamage = getMonsterDamage(monsterID);
+					playerHealth = playerHealth - monsterDamage;
+					
+					if (playerHealth <= 0){
+						alert(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " remaining.  Hit 'OK to proceed to the next turn.");
+						console.log("You have been defeated by " + monsterName + "!  You lose!");
+						return alert("You have been defeated by " + monsterName + "!  You lose!");				
+					}
+					
 					alert(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " remaining.  Hit 'OK to proceed to the next turn.");
-					console.log("You have been defeated by " + monsterName + "!  You lose!");
-					return alert("You have been defeated by " + monsterName + "!  You lose!");				
+					console.log(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " health remaining.");
 				}
-				
-				alert(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " remaining.  Hit 'OK to proceed to the next turn.");
-				console.log(monsterName + " hit you for " + monsterDamage + "!  You have " + playerHealth + " health remaining.");
 			}
-			
 			//break;
 		}
 		
@@ -214,7 +270,6 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 					//monsterStatsArray = setMonsterStats(monsterPosition, monsterDistanceFromPlayer, monsterStats, monsterCheck);
 					monsterAwarenessArray = setMonsterAwareness(monsterPosition, isMonsterAware, monsterCheck, monsterID, monsterCurrentPosition, monsterPlayerPositionDifference, monsterAwarenessArray);
 					indexStage = currentStage - 1;
-					//setIndexDifference = monsterDistanceFromPlayer - 1;
 					
 					if (monsterID >= 0){
 						//monsterCurrentPosition = monsterDistanceFromPlayer + ;
@@ -229,23 +284,12 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 				}
 			}
 			
-			if (isResting === 0 && monsterEncounter === 0){
-				if (!(playerClass === "mage") && monsterDistanceFromPlayer <= 12){
-					if (playerHealth === startingHealth){
-						console.log("You can: roll to move the largest distance, move one stage (moving one stage can sneak up on monsters, however might fail the closer you get), or pass (stay put for one turn)");
-						determineRoll = getMoveCommand(playerClass);
-					}else{
-						getAction = getTurnCommand(playerClass, monsterDistanceFromPlayer, playerHealth, startingHealth);
-						if (getAction === "move"){
-							determineRoll = getMoveCommand(playerClass);
-						}
-						if (getAction === "rest"){
-							isResting = 1;
-							restTurns = getRestCommand(playerClass);
-						}
-					}
-				}else{	//if (playerClass === "mage" && monsterDistanceFromPlayer <=12){
-					getAction = getTurnCommand (playerClass, monsterDistanceFromPlayer, playerHealth, startingHealth);
+			if (isResting === 0 && monsterEncounter === 0){	
+				if (playerHealth === startingHealth){
+					console.log("You can: roll to move the largest distance, move one stage (moving one stage can sneak up on monsters, however might fail the closer you get), or pass (stay put for one turn)");
+					determineRoll = getMoveCommand(playerClass);
+				}else{
+					getAction = getTurnCommand(playerClass, monsterDistanceFromPlayer, playerHealth, startingHealth);
 					if (getAction === "move"){
 						determineRoll = getMoveCommand(playerClass);
 					}
@@ -253,29 +297,11 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 						isResting = 1;
 						restTurns = getRestCommand(playerClass);
 					}
-					if (getAction === "attack"){
-						getMageCommand(playerClass);
-					}
 				}
-				//determine if monster is aware, have them move if player is resting, otherwise don't test for awareness if resting
-					console.log(currentStage);
-					console.log(determineRoll);
-				// for (currentStage; monsterPosition[currentStage] === "x" && determineRoll > 0 && isResting === 0; currentStage){
-					// determineRoll -= 1;
-					// currentStage += 1;
-					// stagesMoved += 1;
-					// console.log(determineRoll);
-					// console.log(currentStage);
-				// }
-				// if (!(monsterPosition[currentStage] === "x")){
-					// monsterEncounter = 1;
-				// }else{
 				for (currentStage; (monsterPosition[currentStage - 1] === "x" || monsterPosition[currentStage - 1] === "v") && determineRoll > 0 && isResting === 0; currentStage){
 					determineRoll -= 1;
 					currentStage += 1;
 					stagesMoved += 1;
-					console.log(determineRoll);
-					console.log(currentStage);
 					indexStage = currentStage - 1;
 				}
 				if (!(monsterPosition[indexStage] === "x" || monsterPosition[indexStage] === "v")){
@@ -329,8 +355,11 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 				monsterID = monsterPosition[currentStage - 1];
 			}
 			monsterName = getMonsterID(monsterID);
-			console.log("Battle with " +  monsterName + " will begin next turn!");
-			alert("Press 'OK' to end this turn");
+			if (monsterID === 6){
+			}else{
+				console.log("Battle with " +  monsterName + " will begin next turn!");
+				alert("Press 'OK' to end this turn");
+			}
 		}
 		if(monsterEncounter === 2){
 			monsterEncounter = 0;
@@ -348,13 +377,13 @@ function startGame(playerClass, playerHealth, monsterCount, monsterHealth, gameE
 
 function getPlayerClass() {
 	
-	let playerClass = prompt("Choose a class (warrior, mage, or rogue).");
+	let playerClass = prompt("Choose a class (warrior or rogue).");
 	playerClass = playerClass.toLowerCase();
 	
 	while(1){
-		if (!(playerClass === "warrior" || playerClass === "mage" || playerClass === "rogue")){
-			alert("Your input wasn't valid.  Try again (type 'warrior' 'mage' or 'rogue' exactly)");
-			playerClass = prompt("Choose a class (warrior, mage, or rogue).");
+		if (!(playerClass === "warrior" || playerClass === "rogue")){	//|| playerClass === "mage" 
+			alert("Your input wasn't valid.  Try again (type 'warrior' or 'rogue' exactly)");
+			playerClass = prompt("Choose a class (warrior, or rogue).");
 			playerClass = playerClass.toLowerCase();
 		}else{
 			return playerClass;
@@ -434,12 +463,10 @@ function determineMonsterPosition (monsterChance, monsterCount, monsterStrength,
 		let monsterAdjustment = 2;
 		monsterAmount += monsterAdjustment;
 	}
-	console.log(monsterAmount);
 	
 	let monsterBaseAmount = monsterStrength * monsterAmount - 2;	//2: spawns 2 weak monsters before tougher ones can spawn
 	
 	let monsterStageDistance = Math.floor(remainingStages / monsterAmount);
-	console.log(monsterStageDistance);
 	
 	for (let i = 0; i <= 99; i ++){
 		if(i >= 0 && i <= 99){
@@ -569,7 +596,7 @@ function getMonsterHealth (monster){
 		return monsterHealth;
 	}
 	if(monster === 6){	//neanderthal
-		monsterHealth = 70 + calculate20Roll() + calculate12Roll();
+		monsterHealth = 50 + calculate20Roll() + calculate12Roll();
 		return monsterHealth;
 	}
 	if(monster === 9){	//wall
@@ -809,7 +836,6 @@ function getMonsterAwareness (monster, monsterPosition){
 	return isAware;
 }
 
-	//^ add playerClass maybe; stop
 function getMonsterID (monsterID){
 	
 	
@@ -850,7 +876,6 @@ function getMonsterID (monsterID){
 }
 
 function setMonsterAwareness (monsterPosition, isMonsterAware, monsterCheck, monsterID, monsterCurrentPosition, monsterPlayerPositionDifference, monsterAwarenessArray){
-	//let isAware; //s = false, a = true
 	isMonsterAware = getMonsterAwareness(monsterID, monsterPlayerPositionDifference);
 	
 	//6 = neanderthal; 9 = wall;
@@ -873,10 +898,6 @@ function setMonsterAwareness (monsterPosition, isMonsterAware, monsterCheck, mon
 		monsterAwarenessArray[monsterCurrentPosition] = "a";
 	}
 	return monsterAwarenessArray;
-}
-
-function setMonsterStats (monsterPosition, j, monsterStats, monsterCheck){
-	
 }
 
 function moveMonsterPosition(monsterPosition, monsterMovement, monsterID, monsterCurrentPosition, currentStage){
@@ -915,13 +936,11 @@ function moveMonsterAwareness(monsterAwarenessArray, monsterMovement, monsterAwa
 
 function removeMonsterPosition(monsterPosition, currentStage){
 	monsterPosition.splice(currentStage - 1, 1, "v");
-	console.log(monsterPosition);
 	return monsterPosition;
 }
 
 function removeMonsterAwareness(monsterAwarenessArray, currentStage){
 	monsterAwarenessArray.splice(currentStage - 1, 1, "d");
-	console.log(monsterAwarenessArray);
 	return monsterAwarenessArray;
 }
 
@@ -930,25 +949,24 @@ function classHealth (playerClass){
 	if (playerClass === "warrior"){
 		console.log("Warrior.  The one who takes fights head on and forces their way through.");
 		console.log("Warriors move between 2-6 spaces, can do up to 20 damage and said damage also gets a minimum roll between 6-12, so should you get a unlucky low roll there's a chance to have decent minimum damage.");
-		//console.log("Warriors have 100 health and can block up to 8 damage on attacks received from monsters.");
 		console.log("Warriors have 100 health.  Press 'OK' above to continue when you're ready, or if you want to change class refresh the page to start over.");
 		health = 100;
 		alert("Press 'OK' when you're ready to continue.");
 		return health;
 		
-	}else if (playerClass === "mage"){
-		console.log("Mage.  Long range casters who fight using their wit and intellect.");
-		console.log("Mages move between 3-8 spaces, can do up to 12 ranged damage with a chance to do critical damage (up to 4 times more).");
-		console.log("Mages can also only take one turn to fully heal (instead of 3).");
-		console.log("Mages have 50 health.  Press 'OK' above to continue when you're ready, or if you want to change class refresh the page to start over.");
-		health = 50;
-		alert("Press 'OK' when you're ready to continue.");
-		return health;
+	// }else if (playerClass === "mage"){
+		// console.log("Mage.  Long range casters who fight using their wit and intellect.");
+		// console.log("Mages move between 3-8 spaces, can do up to 12 ranged damage with a chance to do critical damage (up to 4 times more).");
+		// console.log("Mages can also only take one turn to fully heal (instead of 3).");
+		// console.log("Mages have 50 health.  Press 'OK' above to continue when you're ready, or if you want to change class refresh the page to start over.");
+		// health = 50;
+		// alert("Press 'OK' when you're ready to continue.");
+		// return health;
 		
+	// }
 	}else{
 		console.log("Rogue.  Specializes mostly in speed and evasion, this class can move very quickly, but can easily get overwhelmed if too many wrong moves are made.");
 		console.log("Rogues move between 4-10 spaces, can do up to 8 damage times the number of stages they would have moved past the monster.");
-		//console.log("Able to stun the monster instead for 1-4 turns plus the number of stages they move past the monster.");
 		console.log("Rogues have 70 health.  Press 'OK' above to continue when you're ready, or if you want to change class refresh the page to start over.");
 		health = 70;		
 		alert("Press 'OK' when you're ready to continue.");
@@ -1009,10 +1027,10 @@ function getMoveCommand (playerClass){
 			movement = calculate6Roll(playerClass);
 			return movement;
 			}
-			if (playerClass === "mage"){
-				movement = calculate8Roll(playerClass);
-				return movement;
-			}
+			// if (playerClass === "mage"){
+				// movement = calculate8Roll(playerClass);
+				// return movement;
+			// }
 			if (playerClass === "rogue"){
 				movement = calculate10Roll(playerClass);
 				return movement;
@@ -1155,45 +1173,3 @@ function calculate20Roll(playerClass, determineRoll){
 	let numberOneToTwenty = Math.floor(Math.random()* 20) + 1;
 	return numberOneToTwenty;
 }
-
-	//mr mustachio console.log("d:{");
-	//slime console.log("( *w*)");
-	//boxer console.log("Q(= n = Q)");
-	//paranoid pleb console.log("w( 0.0) ~~~~ (0.0 )w");
-	//robot
-	//console.log("     q----p");
-	//console.log("O----| @@ |----O");
-	//console.log("| |( )|xx( ) |  |");
-	//console.log("L___||uuuu||___v)";
-	//ogre
-	//console.log("| v  ___  v |   ( | | |( )");
-	//console.log("|____________|   \      |");
-	//neanderthal
-	// console.log("──────────────────▄▄───▄▄▄▄▄▄▀▀▀▄──▄")
-	// console.log("────────────────▄▀──▀▀█▄▄──▄────█▄█▄▀▀▄▄▄▄");
-	// console.log("─────────────────▀█▀────▀▀▀▀█▄▄▄▄───▄▄────▀▀▀▀");
-	// console.log("─────────────▄▀▀▀▀▀──▀█▄▄▄▄▄─▀▀▀▀▀█▄███▀");
-	// console.log("──────────────▀█▄▄▄──▀▀─▄▄▄▄──────────▀▀▀▀█▀▀▀");
-	// console.log("───────▄▀▀▀▄▄▀▀████▀█▄▄▄▄▄▄▄▄▄▄▄───▄▄▄▄──▄█░▄█");
-	// console.log("────────▀▄▄▄▀▀██▀▀▀▄█─███▄──██─────▀██▀▀─█░░██");
-	// console.log("────────────▀█─▀▀█▄█▄─▀▀▀───█────────────▀█░▀█");
-	// console.log("─────────▄▄▀▀─▀▀▀▀░░▀█────▄█▄▀────────────█░░░");
-	// console.log("───▄▀▀▀▀▀░░░░░░░░░░░░░▀██▀▀▄▄▀▀──────────██░░░");
-	// console.log("▄▀▀▄████░░███████░░▄▄▄▄░░▀█▄─▀▀──────────▀█▄▄░");
-	// console.log("█░░█████▄▄███████▄██████▄▄░▀█──███▄▄────────█▄");
-	// console.log("█░░░▀▀▀▀▀▀▀▀▀▀▀░░░░░░░░░▀▀▀░░█─▀███▀───────▄█▀");
-	// console.log("─▀▀▄▄▄▄▄░░░░░░░░░░░░░░░░░░░░▄▀─────────────▀█░");
-	// console.log("───▄▀▄▄▀░░░░░░░░░░░░░░░░░░░░█────────────────█");
-	// console.log("▀▀▀─▀▄▀█░░░░░░░░░░░░░░░░░░░░█───────────────▄▀");
-	// console.log("─▄▄▀▀──▀▄░░░░░░░░░░░░░░░░░░█────────────────█░");
-	// console.log("▀────────▀▄░░░░░░░░░░░░░░▄▀──────────▄█▄▄────█");
-	// console.log("───────────▀▄▄▄▄░░░░░▄▄▄▀────────────▀██▀────█");
-	// console.log("────────────█░░░▀▀▀▀██████████▀▀▀▀▀▀▄▄▄▄▄▄▄▄▄█");
-	// console.log("───────────▄▀░░░░░░░█▒▒▒▒▒▒▒▒█░░░░░░░░░▄▄░░░░█");
-	// console.log("───────────▀▄▄▄░░░░░█▒▒▒▒▒▒▒▒█░░░░░░░░░▀█▀░░░█");
-	// console.log("image provided by http://www.messletters.com/en/text-art/");
-	//wall 
-	//console.log("_________________________");
-	//console.log("|_I_I_I_I_I_I_I_I_I_I_I_|");
-	//console.log("|                       |");
-	//console.log("|_______________________|");
